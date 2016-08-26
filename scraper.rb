@@ -27,38 +27,44 @@ module Wikidata
       @item = item
     end
 
+    def self.fields
+      @fields ||= {}
+    end
+
+    def self.field(name, &block)
+      fields[name] = block
+    end
+
     def to_h
-      protected_methods.map { |m|
-        v = send(m) rescue nil
-        [m, v]
+      self.class.fields.map { |name, block|
+        v = instance_eval(&block) rescue nil
+        [name, v]
       }.to_h
     end
 
     class Australia < Constituency
 
-      protected
-
-      def id
+      field :id do
         item.id
       end
 
-      def name
+      field :name do
         item.label('en')
       end
 
-      def state_id
+      field :state_id do
         item.P131.value.id
       end
 
-      def state
+      field :state do
         item.P131.value.label('en')
       end
 
-      def start_date
+      field :start_date do
         item.P571.value
       end
 
-      def end_date
+      field :end_date do
         item.P576.value
       end
     end
