@@ -19,27 +19,37 @@ def p31s(qid)
   wikidata_sparql(query)
 end
 
+module FieldSerializer
+  def self.included(klass)
+    klass.extend ClassMethods
+  end
+
+  module ClassMethods
+    def fields
+      @fields ||= {}
+    end
+
+    def field(name, &block)
+      fields[name] = block
+    end
+  end
+
+  def to_h
+    self.class.fields.map { |name, block|
+      v = instance_eval(&block) rescue nil
+      [name, v]
+    }.to_h
+  end
+end
+
 module Wikidata
   class Constituency
+    include FieldSerializer
+
     attr_reader :item
 
     def initialize(item)
       @item = item
-    end
-
-    def self.fields
-      @fields ||= {}
-    end
-
-    def self.field(name, &block)
-      fields[name] = block
-    end
-
-    def to_h
-      self.class.fields.map { |name, block|
-        v = instance_eval(&block) rescue nil
-        [name, v]
-      }.to_h
     end
 
     class Australia < Constituency
